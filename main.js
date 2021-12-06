@@ -74,7 +74,7 @@ cron.schedule('*/5 * * * *', () => {
                 let random = Math.floor(Math.random() * (phrases.length + 1))
                 const { data } = await axios.get(`https://api.npmjs.org/downloads/point/${laterDate}:${startDate}/${finalresult[i].name}`);
                 const percent = Math.floor((finalresult[i].downloads * 100 / data.downloads))
-                if(percent >= 70 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 2500000) {
+                if(percent >= 70 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 5000000) {
                     console.log('[INFO] Output successful, with package - ' + finalresult[i].name)
                     bot.sendMessage(Channelid, `${phrases[random]}\n\nНазвание: ${finalresult[i].name}\nОписание: ${finalresult[i].descr}\nСкачивания: ${finalresult[i].downloads}\nСсылка: ${finalresult[i].link}\nДата создания: ${finalresult[i].date.split("T")[0]}`, parse_mode)
                     let temp = JSON.parse(fs.readFileSync('blacklist.json', 'utf8'))
