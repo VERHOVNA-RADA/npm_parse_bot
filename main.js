@@ -15,7 +15,12 @@ const phrases = [
     'Какая неожиданность, ведь вышел новый пакет!',
     '9 утра как раз то время что-бы рассказать тебе о новом пакете!',
     'Если ты искал годный пакет то тебе сюда!',
-    ''
+    'Мы снова рады тебя видеть!',
+    'Не давай злым силам одолеть тебя, а лучше возьми новый пакет!',
+    'Если что в пакетах которые мы тебе даем ничего запрещенного нет, так что не переживаай)',
+    'Возможности купить счастье нет, но у тебя есть возможность чекнуть новый пакет ( что впринципе одно и тоже :) )',
+    'IF(ты не счастлив) {дать пакет} ELSE {все равно дать пакет}',
+    'Конечно ты можешь начать день с чего-то другого, но лучше начни день с нового фреймворка!'
 ]
 
 const later = new Date();
@@ -56,25 +61,22 @@ cron.schedule('*/5 * * * *', () => {
                 };
             }))),
         );
+
         let finalresult = result.flat().sort((a,b) =>
             new Date(b.date) - new Date(a.date));
+
         let i = Math.floor(Math.random() * finalresult.length)
         async function output() {
-            console.log('[INFO] Trying to output...')
             if(JSON.parse(fs.readFileSync('blacklist.json', 'utf8')).indexOf(finalresult[i].name) >= 0) {
                 i = Math.floor(Math.random() * finalresult.length)
                 output()
             }else{
+                let random = Math.floor(Math.random() * (phrases.length + 1))
                 const { data } = await axios.get(`https://api.npmjs.org/downloads/point/${laterDate}:${startDate}/${finalresult[i].name}`);
                 const percent = Math.floor((finalresult[i].downloads * 100 / data.downloads))
-                console.log('[INFO] Percent value is ' + percent)
-                console.log('[INFO] I-Count value is ' + i)
-                console.log('[INFO] Downloads value is ' + finalresult[i].downloads)
-                console.log('[INFO] Downloads value later is ' + data.downloads)
-                console.log('[INFO] Name of package is ' + finalresult[i].name)
                 if(percent >= 70 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 2500000) {
                     console.log('[INFO] Output successful, with package - ' + finalresult[i].name)
-                    bot.sendMessage(Channelid, `${finalresult[i].name}\n${finalresult[i].descr}\n${finalresult[i].downloads}\n${finalresult[i].link}\n${finalresult[i].date}`)
+                    bot.sendMessage(Channelid, `${phrases[random]}\n\nНазвание: ${finalresult[i].name}\nОписание: ${finalresult[i].descr}\nСкачивания: ${finalresult[i].downloads}\nСсылка: ${finalresult[i].link}\nДата создания: ${finalresult[i].date.split("T")[0]}`, parse_mode)
                     let temp = JSON.parse(fs.readFileSync('blacklist.json', 'utf8'))
                     temp.push(finalresult[i].name)
                     fs.writeFileSync('blacklist.json', JSON.stringify(temp))
