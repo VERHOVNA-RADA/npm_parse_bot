@@ -1,4 +1,7 @@
-const axios = require('axios');
+const axiosClassic = require('axios');
+const rateLimit  = require('axios-rate-limit');
+
+const axios = rateLimit(axiosClassic.create(), { maxRPS: 50 })
 const date = require('date-and-time');
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs')
@@ -11,7 +14,7 @@ let phraseHours = new Date();
 let hours = phraseHours.getHours();
 
 const categories = ['front-end', 'backend', 'cli', 'documentation', 'css', 'testing', 'iot', 'coverage', 'mobile', 'framework', 'robotics', 'math'];
-const Channelid = '-1001699650376';
+const Channelid = '-1001771375728';
 
 const phrases = [
     'А вот и новый пакет!',
@@ -49,8 +52,7 @@ async function get() {
     }
     return results;
 }
-console.log('[INFO] Bot was stated...')
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('* 9 * * *', () => {
     (async () => {
         const content = await get();
 
@@ -81,14 +83,10 @@ cron.schedule('*/5 * * * *', () => {
                     let random = Math.floor(Math.random() * phrases.length)
                     const { data } = await axios.get(`https://api.npmjs.org/downloads/point/${laterDate}:${startDate}/${finalresult[i].name}`);
                     const percent = Math.floor((finalresult[i].downloads * 100 / data.downloads))
-                    if(percent > 100 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 5000000) {
+                    if(percent > 90 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 2000000) {
                         console.log(finalresult[i].date.split("T")[0].split("-")[0])
-                        if(finalresult[i].date.split("T")[0].split("-")[0] == 2021) {
+                        if(finalresult[i].date.split("T")[0].split("-")[0] >= 2020) {
                             hours = phraseHours.getHours();
-                            console.log('[INFO] Output successful, with package - ' + finalresult[i].name)
-                            console.log('Percent ' + percent)
-                            console.log('Old downloads ' + data.downloads)
-                            console.log('New downloads ' + finalresult[i].downloads)
                             bot.sendMessage(Channelid, `${phrases[random]}\n\n☑ Название: ${finalresult[i].name}\n📋 Описание: ${finalresult[i].descr}\n📊 Скачивания за неделю: ${finalresult[i].downloads}\n⚡ Ссылка: ${finalresult[i].link}\n📅 Дата создания: ${finalresult[i].date.split("T")[0]}`)
                             let temp = JSON.parse(fs.readFileSync('blacklist.json', 'utf8'))
                             temp.push(finalresult[i].name)
@@ -103,7 +101,6 @@ cron.schedule('*/5 * * * *', () => {
                     }
                 }
             }catch (e) {
-                console.log('[ERR] An error occurred, repeating...')
                 output()
             }
         }
