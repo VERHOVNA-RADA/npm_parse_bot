@@ -7,20 +7,26 @@ const cron = require('node-cron');
 const token = '5087288388:AAHYf5WNdZbtDfq2LBB3u1S9Z4-_selBllw';
 const bot = new TelegramBot(token, {polling: true});
 
+let phraseHours = new Date();
+let hours = phraseHours.getHours();
+
 const categories = ['front-end', 'backend', 'cli', 'documentation', 'css', 'testing', 'iot', 'coverage', 'mobile', 'framework', 'robotics', 'math'];
 const Channelid = '-1001699650376';
 
 const phrases = [
     'А вот и новый пакет!',
     'Какая неожиданность, ведь вышел новый пакет!',
-    '9 утра как раз то время что-бы рассказать тебе о новом пакете!',
+    `${hours} часов как раз то время что-бы рассказать тебе о новом пакете!`,
     'Если ты искал годный пакет то тебе сюда!',
     'Мы снова рады тебя видеть!',
     'Не давай злым силам одолеть тебя, а лучше возьми новый пакет!',
     'Если что в пакетах которые мы тебе даем ничего запрещенного нет, так что не переживаай)',
     'Возможности купить счастье нет, но у тебя есть возможность чекнуть новый пакет ( что впринципе одно и тоже :) )',
     'IF(ты не счастлив) {дать пакет} ELSE {все равно дать пакет}',
-    'Конечно ты можешь начать день с чего-то другого, но лучше начни день с нового фреймворка!'
+    'Конечно ты можешь начать день с чего-то другого, но лучше начни день с нового фреймворка!',
+    'Никогда не поздно начать день с нового фреймворка!',
+    'Как никак а пакеты всегда будут появляться!',
+    'А кто тут у нас ещё пакет не чекнул, а?'
 ]
 
 const later = new Date();
@@ -67,23 +73,38 @@ cron.schedule('*/5 * * * *', () => {
 
         let i = Math.floor(Math.random() * finalresult.length)
         async function output() {
-            if(JSON.parse(fs.readFileSync('blacklist.json', 'utf8')).indexOf(finalresult[i].name) >= 0) {
-                i = Math.floor(Math.random() * finalresult.length)
-                output()
-            }else{
-                let random = Math.floor(Math.random() * (phrases.length + 1))
-                const { data } = await axios.get(`https://api.npmjs.org/downloads/point/${laterDate}:${startDate}/${finalresult[i].name}`);
-                const percent = Math.floor((finalresult[i].downloads * 100 / data.downloads))
-                if(percent >= 70 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 5000000) {
-                    console.log('[INFO] Output successful, with package - ' + finalresult[i].name)
-                    bot.sendMessage(Channelid, `${phrases[random]}\n\nНазвание: ${finalresult[i].name}\nОписание: ${finalresult[i].descr}\nСкачивания: ${finalresult[i].downloads}\nСсылка: ${finalresult[i].link}\nДата создания: ${finalresult[i].date.split("T")[0]}`, parse_mode)
-                    let temp = JSON.parse(fs.readFileSync('blacklist.json', 'utf8'))
-                    temp.push(finalresult[i].name)
-                    fs.writeFileSync('blacklist.json', JSON.stringify(temp))
-                }else{
+            try {
+                if(JSON.parse(fs.readFileSync('blacklist.json', 'utf8')).indexOf(finalresult[i].name) >= 0) {
                     i = Math.floor(Math.random() * finalresult.length)
                     output()
+                }else{
+                    let random = Math.floor(Math.random() * phrases.length)
+                    const { data } = await axios.get(`https://api.npmjs.org/downloads/point/${laterDate}:${startDate}/${finalresult[i].name}`);
+                    const percent = Math.floor((finalresult[i].downloads * 100 / data.downloads))
+                    if(percent > 100 && finalresult[i].downloads >= 1000 && finalresult[i].downloads < 5000000) {
+                        console.log(finalresult[i].date.split("T")[0].split("-")[0])
+                        if(finalresult[i].date.split("T")[0].split("-")[0] == 2021) {
+                            hours = phraseHours.getHours();
+                            console.log('[INFO] Output successful, with package - ' + finalresult[i].name)
+                            console.log('Percent ' + percent)
+                            console.log('Old downloads ' + data.downloads)
+                            console.log('New downloads ' + finalresult[i].downloads)
+                            bot.sendMessage(Channelid, `${phrases[random]}\n\n☑ Название: ${finalresult[i].name}\n📋 Описание: ${finalresult[i].descr}\n📊 Скачивания за неделю: ${finalresult[i].downloads}\n⚡ Ссылка: ${finalresult[i].link}\n📅 Дата создания: ${finalresult[i].date.split("T")[0]}`)
+                            let temp = JSON.parse(fs.readFileSync('blacklist.json', 'utf8'))
+                            temp.push(finalresult[i].name)
+                            fs.writeFileSync('blacklist.json', JSON.stringify(temp))
+                        }else{
+                            i = Math.floor(Math.random() * finalresult.length)
+                            output()
+                        }
+                    }else{
+                        i = Math.floor(Math.random() * finalresult.length)
+                        output()
+                    }
                 }
+            }catch (e) {
+                console.log('[ERR] An error occurred, repeating...')
+                output()
             }
         }
         output()
